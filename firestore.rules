@@ -1,0 +1,265 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { 
+      return isSignedIn() && (
+        get(/databases/$(database)/documents/user_profiles/$(request.auth.uid)).data.role == 'SUPER_ADMIN' ||
+        request.auth.token.email == 'eduzamword@gmail.com'
+      ); 
+    }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidNotice(data) {
+      return data.keys().hasAll(['title', 'author', 'content']) &&
+             data.keys().size() == 3 + ('createdAt' in data ? 1 : 0) + ('province' in data ? 1 : 0) &&
+             data.title is string && data.title.size() <= 200 &&
+             data.author is string && data.author.size() <= 100 &&
+             data.content is string && data.content.size() <= 5000 &&
+             (!('createdAt' in data) || data.createdAt is string || data.createdAt is timestamp) &&
+             (!('province' in data) || (data.province is string && data.province.size() <= 50));
+    }
+
+    function isValidStaff(data) {
+      return data.keys().hasAll(['name', 'role', 'school', 'status']) &&
+             data.keys().size() == 4 + ('licenseNo' in data ? 1 : 0) + ('province' in data ? 1 : 0) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.role is string && data.role.size() <= 100 &&
+             data.school is string && data.school.size() <= 100 &&
+             data.status is string && data.status.size() <= 50 &&
+             (!('licenseNo' in data) || (data.licenseNo is string && data.licenseNo.size() <= 100)) &&
+             (!('province' in data) || (data.province is string && data.province.size() <= 50));
+    }
+
+    function isValidMark(data) {
+      return data.keys().hasAll(['studentName', 'subject', 'total']) &&
+             data.keys().size() == 3 + ('grade' in data ? 1 : 0) + ('studentId' in data ? 1 : 0) + ('caScore' in data ? 1 : 0) + ('examScore' in data ? 1 : 0) + ('letter' in data ? 1 : 0) &&
+             data.studentName is string && data.studentName.size() <= 100 &&
+             data.subject is string && data.subject.size() <= 50 &&
+             data.total is string && data.total.size() <= 10 &&
+             (!('grade' in data) || (data.grade is string && data.grade.size() <= 50)) &&
+             (!('studentId' in data) || (data.studentId is string && data.studentId.size() <= 50)) &&
+             (!('caScore' in data) || (data.caScore is string && data.caScore.size() <= 20)) &&
+             (!('examScore' in data) || (data.examScore is string && data.examScore.size() <= 20)) &&
+             (!('letter' in data) || (data.letter is string && data.letter.size() <= 5));
+    }
+
+    function isValidStudent(data) {
+      return data.keys().hasAll(['name', 'grade', 'school']) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.grade is string && data.grade.size() <= 50 &&
+             data.school is string && data.school.size() <= 150 &&
+             (!('status' in data) || (data.status is string && data.status.size() <= 50)) &&
+             (!('nrc' in data) || (data.nrc is string && data.nrc.size() <= 50)) &&
+             (!('examNo' in data) || (data.examNo is string && data.examNo.size() <= 50)) &&
+             (!('classId' in data) || (data.classId is string && data.classId.size() <= 100)) &&
+             (!('className' in data) || (data.className is string && data.className.size() <= 100)) &&
+             (!('gender' in data) || (data.gender is string && data.gender.size() <= 20)) &&
+             (!('guardianName' in data) || (data.guardianName is string && data.guardianName.size() <= 100)) &&
+             (!('guardianRelationship' in data) || (data.guardianRelationship is string && data.guardianRelationship.size() <= 50)) &&
+             (!('guardianPhone' in data) || (data.guardianPhone is string && data.guardianPhone.size() <= 50)) &&
+             (!('guardianEmergencyPhone' in data) || (data.guardianEmergencyPhone is string && data.guardianEmergencyPhone.size() <= 50)) &&
+             (!('guardianEmail' in data) || (data.guardianEmail is string && data.guardianEmail.size() <= 100)) &&
+             (!('guardianAddress' in data) || (data.guardianAddress is string && data.guardianAddress.size() <= 200)) &&
+             (!('guardianTown' in data) || (data.guardianTown is string && data.guardianTown.size() <= 100)) &&
+             (!('attendanceRate' in data) || data.attendanceRate is number) &&
+             (!('caStatus' in data) || (data.caStatus is string && data.caStatus.size() <= 50)) &&
+             (!('dob' in data) || (data.dob is string && data.dob.size() <= 30)) &&
+             (!('createdAt' in data) || data.createdAt is timestamp || data.createdAt is string) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp || data.updatedAt is string);
+    }
+
+    function isValidClass(data) {
+      return data.keys().hasAll(['name', 'grade', 'school']) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.grade is string && data.grade.size() <= 50 &&
+             data.school is string && data.school.size() <= 150 &&
+             (!('stream' in data) || (data.stream is string && data.stream.size() <= 50)) &&
+             (!('academicYear' in data) || (data.academicYear is string && data.academicYear.size() <= 20)) &&
+             (!('term' in data) || (data.term is string && data.term.size() <= 20)) &&
+             (!('room' in data) || (data.room is string && data.room.size() <= 50)) &&
+             (!('capacity' in data) || data.capacity is number) &&
+             (!('classTeacherName' in data) || (data.classTeacherName is string && data.classTeacherName.size() <= 100)) &&
+             (!('classTeacherEmail' in data) || (data.classTeacherEmail is string && data.classTeacherEmail.size() <= 100)) &&
+             (!('classTeacherPhone' in data) || (data.classTeacherPhone is string && data.classTeacherPhone.size() <= 50)) &&
+             (!('subjects' in data) || data.subjects is list) &&
+             (!('isFormed' in data) || data.isFormed is bool) &&
+             (!('formationDate' in data) || (data.formationDate is string && data.formationDate.size() <= 50)) &&
+             (!('createdAt' in data) || data.createdAt is timestamp || data.createdAt is string) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp || data.updatedAt is string);
+    }
+
+    function isValidResult(data) {
+      return data.keys().hasAll(['studentName', 'subject', 'className']) &&
+             data.studentName is string && data.studentName.size() <= 100 &&
+             data.subject is string && data.subject.size() <= 100 &&
+             data.className is string && data.className.size() <= 100;
+    }
+
+    function isValidSBARecord(data) {
+      return data.keys().hasAll(['studentName', 'subject', 'className']) &&
+             data.studentName is string && data.studentName.size() <= 100 &&
+             data.subject is string && data.subject.size() <= 100 &&
+             data.className is string && data.className.size() <= 100;
+    }
+
+    function isValidSubject(data) {
+      return data.keys().hasAll(['name', 'code']) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.code is string && data.code.size() <= 50 &&
+             (!('grade' in data) || (data.grade is string && data.grade.size() <= 50)) &&
+             (!('classId' in data) || (data.classId is string && data.classId.size() <= 100)) &&
+             (!('className' in data) || (data.className is string && data.className.size() <= 100)) &&
+             (!('teacherName' in data) || (data.teacherName is string && data.teacherName.size() <= 100)) &&
+             (!('teacherEmail' in data) || (data.teacherEmail is string && data.teacherEmail.size() <= 100)) &&
+             (!('periodsPerWeek' in data) || data.periodsPerWeek is number) &&
+             (!('syllabusType' in data) || (data.syllabusType is string && data.syllabusType.size() <= 50)) &&
+             (!('school' in data) || (data.school is string && data.school.size() <= 150));
+    }
+
+    function isValidInstitution(data) {
+      return data.keys().hasAll(['name', 'category', 'province']) &&
+             data.keys().size() == 3 + ('code' in data ? 1 : 0) + ('createdAt' in data ? 1 : 0) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.category is string && data.category.size() <= 50 &&
+             data.province is string && data.province.size() <= 50 &&
+             (!('code' in data) || (data.code is string && data.code.size() <= 50)) &&
+             (!('createdAt' in data) || data.createdAt is timestamp);
+    }
+
+    function isValidLessonPlan(data) {
+      return data.keys().hasAll(['schoolName', 'topic', 'subject']) &&
+             data.schoolName is string && data.schoolName.size() <= 200 &&
+             data.topic is string && data.topic.size() <= 300 &&
+             data.subject is string && data.subject.size() <= 100;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['sender']) &&
+             data.keys().size() <= 16 &&
+             data.sender is string && data.sender.size() <= 100 &&
+             (!('text' in data) || (data.text is string && data.text.size() <= 5000)) &&
+             (!('senderEmail' in data) || (data.senderEmail is string && data.senderEmail.size() <= 100)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 500000)) &&
+             (!('imageSize' in data) || (data.imageSize is string && data.imageSize.size() <= 50)) &&
+             (!('stickerBadge' in data) || (data.stickerBadge is string && data.stickerBadge.size() <= 50)) &&
+             (!('replyTo' in data) || (data.replyTo is string && data.replyTo.size() <= 500)) &&
+             (!('reactions' in data) || (data.reactions is map)) &&
+             (!('isAi' in data) || (data.isAi is bool)) &&
+             (!('status' in data) || (data.status is string && data.status.size() <= 30)) &&
+             (!('aiThumbs' in data) || (data.aiThumbs is string && data.aiThumbs.size() <= 20)) &&
+             (!('chatId' in data) || (data.chatId is string && data.chatId.size() <= 100)) &&
+             (!('createdAt' in data) || data.createdAt is timestamp || data.createdAt is string);
+    }
+
+    match /notices/{noticeId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidNotice(incoming()) && isValidId(noticeId);
+      allow update: if isSignedIn() && isValidNotice(incoming()) && isValidId(noticeId) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['title', 'author', 'content', 'createdAt', 'province']);
+      allow delete: if isSignedIn() && isValidId(noticeId);
+    }
+
+    match /staff/{staffId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidStaff(incoming()) && isValidId(staffId);
+      allow update: if isSignedIn() && isValidStaff(incoming()) && isValidId(staffId) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['name', 'role', 'school', 'status', 'licenseNo', 'province']);
+      allow delete: if isSignedIn() && isValidId(staffId);
+    }
+
+    match /marks/{markId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidMark(incoming()) && isValidId(markId);
+      allow update: if isSignedIn() && isValidMark(incoming()) && isValidId(markId) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['studentName', 'subject', 'total', 'grade', 'studentId', 'caScore', 'examScore', 'letter']);
+      allow delete: if isSignedIn() && isValidId(markId);
+    }
+
+    match /classes/{classId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidClass(incoming()) && isValidId(classId);
+      allow update: if isSignedIn() && isValidClass(incoming()) && isValidId(classId);
+      allow delete: if isSignedIn() && isValidId(classId);
+    }
+
+    match /subjects/{subjectId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidSubject(incoming()) && isValidId(subjectId);
+      allow update: if isSignedIn() && isValidSubject(incoming()) && isValidId(subjectId);
+      allow delete: if isSignedIn() && isValidId(subjectId);
+    }
+
+    match /students/{studentId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidStudent(incoming()) && isValidId(studentId);
+      allow update: if isSignedIn() && isValidStudent(incoming()) && isValidId(studentId);
+      allow delete: if isSignedIn() && isValidId(studentId);
+    }
+
+    match /student_results/{resultId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidId(resultId);
+      allow delete: if isSignedIn() && isValidId(resultId);
+    }
+
+    match /sba_records/{sbaId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidId(sbaId);
+      allow delete: if isSignedIn() && isValidId(sbaId);
+    }
+
+    match /student_reports/{reportId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidId(reportId);
+      allow delete: if isSignedIn() && isValidId(reportId);
+    }
+
+    match /report_cards/{reportId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidId(reportId);
+      allow delete: if isSignedIn() && isValidId(reportId);
+    }
+
+    match /institutions/{instId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidInstitution(incoming()) && isValidId(instId);
+      allow update: if isSignedIn() && isValidInstitution(incoming()) && isValidId(instId) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'province', 'code']);
+      allow delete: if isSignedIn() && isValidId(instId);
+    }
+
+    match /lesson_plans/{planId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidLessonPlan(incoming()) && isValidId(planId);
+      allow update: if isSignedIn() && isValidLessonPlan(incoming()) && isValidId(planId);
+      allow delete: if isSignedIn() && isValidId(planId);
+    }
+
+    match /messages/{messageId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidMessage(incoming()) && isValidId(messageId);
+      allow update: if isSignedIn() && isValidMessage(incoming()) && isValidId(messageId);
+      allow delete: if isSignedIn() && isValidId(messageId);
+    }
+
+    match /user_profiles/{profileId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(profileId);
+      allow update: if isAdmin() || isOwner(profileId);
+      allow delete: if isAdmin();
+    }
+
+    match /app_settings/{settingsId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

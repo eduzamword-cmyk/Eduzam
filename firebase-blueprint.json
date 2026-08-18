@@ -1,0 +1,115 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Public and private profile information for educators and administrators.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "fullName": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "enum": ["SUPER_ADMIN", "PROVINCIAL_DIRECTOR", "SCHOOL_HEAD", "ECZ_INSPECTOR", "TEACHER", "CLASS_TEACHER"] },
+        "institution": { "type": "string", "maxLength": 150 },
+        "province": { "type": "string" },
+        "staffId": { "type": "string", "pattern": "^[a-zA-Z0-9\\-]+$" },
+        "approved": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "fullName", "role", "approved"]
+    },
+    "SchoolClass": {
+      "title": "School Class Roster Unit",
+      "description": "Academic class/stream unit with assigned class teacher, enrolled subjects, and roster.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "grade": { "type": "string", "maxLength": 50 },
+        "stream": { "type": "string", "maxLength": 50 },
+        "school": { "type": "string", "maxLength": 150 },
+        "academicYear": { "type": "string", "maxLength": 20 },
+        "term": { "type": "string", "maxLength": 20 },
+        "room": { "type": "string", "maxLength": 50 },
+        "capacity": { "type": "number" },
+        "classTeacherName": { "type": "string", "maxLength": 100 },
+        "classTeacherEmail": { "type": "string", "maxLength": 100 },
+        "classTeacherPhone": { "type": "string", "maxLength": 50 },
+        "subjects": { "type": "array", "description": "List of subject names" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "grade", "school"]
+    },
+    "SchoolSubject": {
+      "title": "Academic Subject",
+      "description": "Subject taught in a class or institution with teacher and syllabus configuration.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "code": { "type": "string", "maxLength": 50 },
+        "grade": { "type": "string", "maxLength": 50 },
+        "classId": { "type": "string", "maxLength": 100 },
+        "className": { "type": "string", "maxLength": 100 },
+        "teacherName": { "type": "string", "maxLength": 100 },
+        "teacherEmail": { "type": "string", "maxLength": 100 },
+        "periodsPerWeek": { "type": "number" },
+        "syllabusType": { "type": "string", "maxLength": 50 },
+        "school": { "type": "string", "maxLength": 150 }
+      },
+      "required": ["name", "code"]
+    },
+    "StudentCandidate": {
+      "title": "Student Candidate",
+      "description": "Enrolled student or exam candidate belonging to a class roster.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "grade": { "type": "string", "maxLength": 50 },
+        "classId": { "type": "string", "maxLength": 100 },
+        "className": { "type": "string", "maxLength": 100 },
+        "school": { "type": "string", "maxLength": 150 },
+        "examNo": { "type": "string", "maxLength": 50 },
+        "gender": { "type": "string", "enum": ["Male", "Female"] },
+        "nrc": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "maxLength": 50 },
+        "guardianName": { "type": "string", "maxLength": 100 },
+        "guardianPhone": { "type": "string", "maxLength": 50 },
+        "attendanceRate": { "type": "number" }
+      },
+      "required": ["name", "grade", "school"]
+    },
+    "AppSettings": {
+      "title": "App Settings",
+      "description": "Global application controls and configuration.",
+      "type": "object",
+      "properties": {
+        "maintenanceMode": { "type": "boolean" },
+        "registrationEnabled": { "type": "boolean" },
+        "version": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "updatedBy": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/user_profiles/{userId}": {
+      "schema": "UserProfile",
+      "description": "Individual user profile documents."
+    },
+    "/classes/{classId}": {
+      "schema": "SchoolClass",
+      "description": "Class and stream roster configurations with assigned class teachers."
+    },
+    "/subjects/{subjectId}": {
+      "schema": "SchoolSubject",
+      "description": "Subjects assigned to classes and teachers."
+    },
+    "/students/{studentId}": {
+      "schema": "StudentCandidate",
+      "description": "Enrolled students across school class rosters."
+    },
+    "/app_settings/{settingsId}": {
+      "schema": "AppSettings",
+      "description": "Global application settings."
+    }
+  }
+}

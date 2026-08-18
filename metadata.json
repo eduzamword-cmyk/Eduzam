@@ -1,0 +1,6 @@
+{
+  "name": "EDUZAM Portal",
+  "description": "Republic of Zambia Education Management System Command Center, ECZ Markbook, CDC Syllabi & Super Admin Oversight",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
